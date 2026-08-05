@@ -1,0 +1,8 @@
+2026-08-03 09:10:21 INFO User admin logged in from 192.168.1.10
+2026-08-03 09:12:05 ERROR Failed login for user root from 192.168.1.15
+2026-08-03 09:13:44 INFO User alice logged in from 192.168.1.20
+2026-08-03 09:14:11 ERROR Failed login for user admin from 192.168.1.15
+2026-08-03 09:15:00 WARNING Multiple failed attempts detected from 192.168.1.15
+2026-08-03 09:16:32 INFO User bob logged in from 192.168.1.25
+2026-08-03 09:17:50 ERROR Failed login for user root from 192.168.1.15
+2026-08-03 09:18:40 INFO User admin logged out from 192.168.1.10
