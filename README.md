@@ -25,6 +25,7 @@ A Python-based Security Log Analyzer that parses log files, analyzes security ev
 
 ## Project Structure
 
+```text
 security-log-analyzer/
 ├── analyzer.py
 ├── logs/
@@ -32,6 +33,7 @@ security-log-analyzer/
 ├── README.md
 ├── Requirements.txt
 └── .gitignore
+```
 
 ## How to Run
 
