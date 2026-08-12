@@ -1,6 +1,7 @@
 # Python cache
 __pycache__/
 *.pyc
+security_report.txt
 
 # Virtual environments
 venv/
