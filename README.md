@@ -1,35 +1,61 @@
 # Security Log Analyzer
 
-A Python-based Security Log Analyzer that parses log files, analyzes security events, detects failed login attempts, and identifies potential brute-force attacks.
+A Python-based Security Log Analyzer that parses security log files, detects failed login attempts, identifies suspicious IP addresses, detects possible brute-force attacks, and generates a security assessment report.
 
 ## Features
 
-- Read log files from a user-provided file path
-- Parse and validate log entries
-- Extract usernames and IP addresses
-- Count INFO, ERROR, and WARNING logs
-- Detect invalid or malformed log entries
-- Detect failed login attempts
-- Identify potential brute-force attacks based on failed login attempts within a defined time window
-- Generate a structured security report
-- Handle missing and empty log files gracefully
+* Read and parse security log files
+* Validate log entries and detect malformed logs
+* Count INFO, ERROR, and WARNING log entries
+* Extract usernames and source IP addresses
+* Detect failed login attempts
+* Analyze failed login attempts by IP address
+* Identify suspicious IP addresses
+* Detect possible brute-force attacks
+* Assign security severity levels
+* Calculate an overall security risk level
+* Generate a detailed security report
+* Handle missing and empty log files safely
+* Support command-line log file input
+
+## Security Detection
+
+The analyzer currently uses the following logic:
+
+| Detection                   | Severity |
+| --------------------------- | -------- |
+| INFO event                  | LOW      |
+| WARNING event               | MEDIUM   |
+| ERROR event                 | MEDIUM   |
+| Suspicious IP               | MEDIUM   |
+| Possible brute-force attack | HIGH     |
+
+A possible brute-force attack is detected when an IP address has at least 3 failed login attempts within 60 seconds.
 
 ## Technologies Used
 
-- Python 3
-- Dictionaries
-- Functions
-- File Handling
-- Exception Handling
-- datetime module
+* Python 3
+* File Handling
+* Dictionaries
+* Functions
+* Exception Handling
+* `datetime`
+* Command-Line Arguments
 
 ## Project Structure
 
 ```text
-security-log-analyzer/
+Security-Log-Analyzer/
+│
 ├── analyzer.py
 ├── logs/
-│   └── sample.log
+│   ├── sample.log
+│   ├── normal.log
+│   ├── brute_force.log
+│   ├── suspicious.log
+│   ├── invalid.log
+│   └── empty.log
+│
 ├── README.md
 ├── Requirements.txt
 └── .gitignore
@@ -37,65 +63,160 @@ security-log-analyzer/
 
 ## How to Run
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
-Clone the repository and navigate to the project directory.
+```bash
+git clone https://github.com/aditya030604-collab/security-log-analyzer
+cd Security-Log-Analyzer
+```
 
-### 2. Run the Analyzer
+### 2. Run with a log file
 
-Open a terminal in the project directory and run:
+```bash
+python analyzer.py logs/sample.log
+```
 
+### 3. Interactive mode
+
+You can also run the analyzer without specifying a log file:
+
+```bash
 python analyzer.py
+```
 
-### 3. Provide the Log File Path
+The program will ask:
 
-When prompted, enter the path to the log file:
+```text
+Enter the path to the log file:
+```
 
-logs/sample.log
+Enter the path to your log file.
 
-The analyzer will process the log file and display a security summary in the terminal.
+## Sample Test Cases
 
-### 4. Security Report
+### Normal Logs
 
-After analysis, the program generates a security_report.txt file containing:
+```bash
+python analyzer.py logs/normal.log
+```
 
-- Log summary
-- Failed login attempts
-- Potential brute-force attacks
+Tests normal INFO, WARNING, and other valid log activity.
 
-The report is generated locally and is excluded from the Git repository using .gitignore.
+### Brute-Force Detection
 
-## Example Analysis
+```bash
+python analyzer.py logs/brute_force.log
+```
 
-The analyzer can identify failed login attempts such as:
+Tests detection of 3 failed login attempts from the same IP within 60 seconds.
 
-Time : 09:12:05
-User : root
-IP   : 192.168.1.15
+Expected risk level:
 
-It can also identify potential brute-force activity when multiple failed login attempts from the same IP address occur within the defined time window.
+```text
+Overall Risk : HIGH
+```
+
+### Suspicious IP Detection
+
+```bash
+python analyzer.py logs/suspicious.log
+```
+
+Tests multiple failed login attempts that do not meet the brute-force threshold.
+
+Expected risk level:
+
+```text
+Overall Risk : MEDIUM
+```
+
+### Invalid Log Handling
+
+```bash
+python analyzer.py logs/invalid.log
+```
+
+Tests malformed log entries and verifies that the analyzer handles them without crashing.
+
+### Empty Log Handling
+
+```bash
+python analyzer.py logs/empty.log
+```
+
+Tests the analyzer's handling of an empty log file.
+
+Expected output:
+
+```text
+Error: log file is empty
+```
+
+## Generated Report
+
+After analysis, the program generates:
+
+```text
+security_report.txt
+```
+
+The report contains:
+
+* Report generation timestamp
+* Overall security risk
+* Total log entries
+* Valid log entries
+* Invalid log entries
+* INFO/ERROR/WARNING counts
+* Failed login attempts
+* Failed login analysis by IP
+* Suspicious IP analysis
+* Security findings
+* Brute-force detection results
+
+The generated report is excluded from Git tracking using `.gitignore`.
+
+## Example Detection
+
+For multiple failed login attempts from the same IP, the analyzer can produce:
+
+```text
+Possible Brute Force Attack
+IP Address       : 192.168.1.15
+Failed Attempts  : 3
+```
+
+The analyzer also identifies suspicious IP addresses based on repeated failed login attempts.
 
 ## Error Handling
 
-The analyzer handles common input problems such as:
+The analyzer safely handles:
 
-- Missing log files
-- Empty log files
-- Invalid log entries
-- Invalid date and time formats
-- Unsupported log levels
+* Missing log files
+* Empty log files
+* Invalid timestamps
+* Invalid log levels
+* Malformed log entries
 
-Invalid entries are skipped and counted separately instead of causing the program to terminate.
+Invalid entries are counted and excluded from the valid log analysis.
 
 ## Future Improvements
 
-- Support Linux authentication logs
-- Support Windows Event Logs
-- Detect suspicious user activity
-- Export reports to CSV and PDF
-- Add additional security event detection
-- Add configurable brute-force detection thresholds
+Possible future enhancements include:
+
+* Real-time log monitoring
+* Additional attack-pattern detection
+* Authentication anomaly detection
+* CSV/JSON report export
+* Visualization dashboard
+* Configurable detection thresholds
+* Automated alerting
+* Integration with SIEM platforms
 
 ## Author
 
 Aditya Sharma
+
+## License
+
+This project is intended for educational and cybersecurity portfolio purposes.

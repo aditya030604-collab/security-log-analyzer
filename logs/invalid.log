@@ -1,0 +1,4 @@
+2026-08-18 13:00:00 INFO User admin logged in from 192.168.1.10
+This is an invalid log entry
+2026-08-18 invalid-time WARNING Disk usage is high
+2026-08-18 13:02:00 SOMETHING Invalid log format

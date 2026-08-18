@@ -1,4 +1,5 @@
 from datetime import datetime
+import sys
 def read_log_file(file_path):
     try:
         with open(file_path, "r") as file:
@@ -86,6 +87,66 @@ def detect_failed_logins(logs):
 
     return failed_logins
 
+def analyze_failed_login_ips(failed_logins):
+    ip_counts = {}
+
+    for login in failed_logins:
+        ip = login["ip"]
+
+        if ip in ip_counts:
+            ip_counts[ip] += 1
+        else:
+            ip_counts[ip] = 1
+
+    return ip_counts
+
+def detect_suspicious_ips(failed_login_ips):
+    suspicious_ips = []
+
+    for ip, count in failed_login_ips.items():
+        if count >= 2:
+            suspicious_ips.append({
+                "ip": ip,
+                "failed_attempts": count,
+                "severity": "MEDIUM"
+            })
+
+    return suspicious_ips
+
+def calculate_overall_risk(brute_force_results, suspicious_ips):
+    if brute_force_results:
+        return "HIGH"
+    elif suspicious_ips:
+        return "MEDIUM"
+    else:
+        return "LOW"
+
+def analyze_severity(logs, brute_force_results):
+    findings = []
+
+    for log in logs:
+        if log["level"] == "WARNING":
+            findings.append({
+                "severity"  : "MEDIUM",
+                "message"   : "Warning event detected",
+                "ip"    : log["ip"]  
+            })
+        elif log["level"] == "ERROR":
+            findings.append({
+                "severity"  : "MEDIUM",
+                "message"   : "Error event detected",
+                "ip"    : log["ip"]
+            })
+
+    for result in brute_force_results:
+        findings.append({
+            "severity"  : "HIGH",
+            "message"   : "Possible brute-force attack detetcted",
+            "ip"    : result["ip"],
+            "failed_attempts"   : result["failed_attempts"]
+        })
+    return findings
+
 def detect_brute_force(logs):
     ip_times = {}
     brute_force_results = []
@@ -120,7 +181,10 @@ def detect_brute_force(logs):
     return brute_force_results
 
 def main():
-    file_path = input("Enter the path to the log file:")
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+    else:
+        file_path = input("Enter the path to the log file:")
     log_entries = read_log_file(file_path)
     if log_entries is None:
         return
@@ -138,7 +202,43 @@ def main():
         warning_count
     )
     failed_logins = detect_failed_logins(logs)
+    failed_login_ips = analyze_failed_login_ips(failed_logins)
+    suspicious_ips = detect_suspicious_ips(failed_login_ips)
     brute_force_results = detect_brute_force(logs)
+    severity_findings = analyze_severity(logs, brute_force_results)
+
+    overall_risk = calculate_overall_risk(
+        brute_force_results,
+        suspicious_ips
+    )
+
+    print("\nSuspicius IP Analysis")
+    print("------------------------")
+
+    for result in suspicious_ips:
+        print(f"Severity: {result['severity']}")
+        print(f"IP Address: {result['ip']}")
+        print(f"Failed Attempts: {result['failed_attempts']}")
+        print()
+
+    print("\nSecurity Findings")
+    print("-----------------------------")
+
+    for finding in severity_findings:
+        print(f"[{finding['severity']}] {finding['message']}")
+        print(f"IP Address: {finding['ip']}")
+        print()
+
+    print("\nFailed Login Analysis")
+    print("------------------------\n")
+    for ip, count in sorted(
+        failed_login_ips.items(),
+        key = lambda item : item[1],
+        reverse = True
+    ):
+        print(f"IP Address: {ip}")
+        print(f"Failed Attempts: {count}")
+        print()
     generate_report(
         len(log_entries),
         invalid_entries,
@@ -146,7 +246,11 @@ def main():
         error_count,
         warning_count,
         failed_logins,
-        brute_force_results
+        failed_login_ips,
+        suspicious_ips,
+        brute_force_results,
+        severity_findings,
+        overall_risk
     )
 
 def write_failed_login_report(report, failed_logins):
@@ -160,7 +264,54 @@ def write_failed_login_report(report, failed_logins):
                 report.write(f"IP : {login['ip']}\n")
                 report.write("---------------------------------------\n\n")
     else:
-        report.write("No failed logins detected\n")
+        report.write("No failed logins detected\n\n")
+
+def write_failed_login_ip_report(report, failed_login_ips):
+    report.write("Failed Login Analysis by IP\n")
+    report.write("----------------------------------------\n")
+
+    if failed_login_ips:
+        for ip, count in sorted(
+            failed_login_ips.items(),
+            key = lambda item: item[1],
+            reverse = True
+        ):
+            report.write(f"IP Address       : {ip}\n")
+            report.write(f"Failed Attempts  : {count}\n")
+            report.write(f"-----------------------------------\n\n")
+    else:
+            report.write("No failed logins attempts detected.\n\n")
+
+def write_security_findings_report(report, severity_findings):
+    report.write("Security Findings\n")
+    report.write("---------------------------------\n")
+
+    if severity_findings:
+        for finding in severity_findings:
+            report.write(f"Severity         : {finding['severity']}\n")
+            report.write(f"Finding          : {finding['message']}\n")
+            report.write(f"IP Address       : {finding['ip']}\n")
+            report.write("--------------------------------------------------\n\n")
+            if "failed_attempts" in finding:
+                report.write(
+                    f"Failed Attempts       : {finding['failed_attempts']}\n"
+                )
+                report.write("--------------------------------------------------\n\n")
+    else:
+        report.write("No security findings detected.\n\n")
+
+def write_suspicious_ip_report(report, suspicious_ips):
+    report.write("Suspicious IP Analysis\n")
+    report.write("---------------------------------------------\n")
+
+    if suspicious_ips:
+        for result in suspicious_ips:
+            report.write(f"Severity     : {result['severity']}\n")
+            report.write(f"IP Address   : {result['ip']}\n")
+            report.write(f"Failed Attempts  : {result['failed_attempts']}\n")
+            report.write("--------------------------------------------------\n\n")
+    else:
+        report.write("No suspicious IPs detected.\n\n")
 
 def write_brute_force_report(report, brute_force_results):
             report.write("Brute Force Detection\n")
@@ -174,18 +325,29 @@ def write_brute_force_report(report, brute_force_results):
                         report.write("---------------------------------------\n")
             else:
                 report.write("No Brute Force Attacks Detected.\n")
-def generate_report(total_log_entries, invalid_entries, info_count, error_count, warning_count, failed_logins, brute_force_results):
+def generate_report(total_log_entries, invalid_entries, info_count, error_count, warning_count, failed_logins, failed_login_ips, suspicious_ips, brute_force_results, severity_findings, overall_risk):
     with open("security_report.txt", "w") as report:
         report.write("\n============= Security Log Analyzer =================\n")
+        report.write("Security Assessment\n")
+        report.write("----------------------------------------------------------\n")
+        report.write(
+            f"Report generated  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
+        report.write(f"Overall Risk     : {overall_risk}\n")
+        report.write("-----------------------------------------------------------\n\n")
         report.write("Summary\n")
         report.write("----------------------------------------------\n")
         report.write(f"Total Log Entries    : {total_log_entries}\n")
+        report.write(f"Valid Log Entries    : {total_log_entries - invalid_entries}\n")
+        report.write(f"Invalid Logs         : {invalid_entries}\n")
         report.write(f"INFO Logs            : {info_count}\n")
         report.write(f"ERROR Logs           : {error_count}\n")
         report.write(f"WARNING Logs         : {warning_count}\n")
-        report.write(f"Invalid Logs         : {invalid_entries}\n")
         report.write("----------------------------------------------\n\n")
         write_failed_login_report(report, failed_logins)
+        write_failed_login_ip_report(report, failed_login_ips)
+        write_suspicious_ip_report(report, suspicious_ips)
+        write_security_findings_report(report, severity_findings)
         write_brute_force_report(report, brute_force_results)
         
 if __name__ == "__main__":

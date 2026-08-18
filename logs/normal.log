@@ -1,0 +1,4 @@
+2026-08-18 10:00:00 INFO User admin logged in from 192.168.1.10
+2026-08-18 10:01:00 INFO User alice logged in from 192.168.1.11
+2026-08-18 10:02:00 WARNING Disk usage is above 80% on 192.168.1.10
+2026-08-18 10:03:00 INFO User bob logged in from 192.168.1.12
